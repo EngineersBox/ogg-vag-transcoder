@@ -51,11 +51,17 @@ fn run() {
     };
     info!(&crate::LOGGER, "Opened OGG input file as stream");
     let sample_rate: i32 = ogg_stream.ident_hdr.audio_sample_rate as i32;
-    if ogg_stream.ident_hdr.audio_channels > 2 {
+    let channels = ogg_stream.ident_hdr.audio_channels;
+    if channels > 2 {
         crit!(&crate::LOGGER, "Cannot process more than 2 channels");
         return;
     }
-    info!(&crate::LOGGER, "Input sample rate: {sample_rate}Hz");
+    debug!(&crate::LOGGER, "[OGG IDENT] Sample rate: {sample_rate}Hz");
+    debug!(&crate::LOGGER, "[OGG IDENT] Audio channels: {channels}");
+    debug!(&crate::LOGGER, "[OGG IDENT] Blocksizes [0: {}] [1: {}]", ogg_stream.ident_hdr.blocksize_0, ogg_stream.ident_hdr.blocksize_1);
+    ogg_stream.comment_hdr.comment_list.iter().for_each(|elem: &(String, String)|
+        debug!(&crate::LOGGER, "[OGG COMMENT] {}: {}", elem.0, elem.1)
+    );
     let vag_file: File = match OpenOptions::new()
                                             .write(true)
                                             .create(true)
@@ -69,19 +75,19 @@ fn run() {
     let mut vag_writer: BufWriter<File> = BufWriter::new(vag_file);
     info!(&crate::LOGGER, "Created output writer for VAG stream");
     let mut vag_encoder: VAGEncoder = VAGEncoder::default();
-    let mut chunk_count = 0;
+    let mut chunk_count: usize = 0;
     let mut source_sample_count: usize = 0;
     let mut dest_sample_bytes: usize = 0;
-    let bar = ProgressBar::new_spinner();
+    let bar: ProgressBar = ProgressBar::new_spinner();
     while let Some(samples) = ogg_stream.read_dec_packet_itl()
         .unwrap_or_else(|e: VorbisError| -> Option<Vec<i16>> {
-            error!(&crate::LOGGER, "Failed to read + decode interleaved packet {e}");
+            error!(&crate::LOGGER, "Failed to read + decode interleaved packet [Chunk: {chunk_count}] {e}");
             None
         }) {
         match vag_encoder.encode_chunk(&samples, false, 0, 0, &mut vag_writer) {
             Ok(bytes) => {
                 dest_sample_bytes += bytes;
-                bar.set_message(format!("Chunk: {chunk_count} OGG Samples: {source_sample_count} VAG Bytes: {dest_sample_bytes}"));
+                bar.set_message(format!("Chunks: {chunk_count} OGG Samples: {source_sample_count} VAG Bytes: {dest_sample_bytes}"));
                 bar.tick();
             },
             Err(e) => {
@@ -96,7 +102,7 @@ fn run() {
     match vag_encoder.encode_ending(false, &mut vag_writer) {
         Ok(bytes) => {
             dest_sample_bytes += bytes;
-            bar.set_message(format!("Chunk: {chunk_count} OGG Samples: {source_sample_count} VAG Bytes: {dest_sample_bytes}"));
+            bar.set_message(format!("Chunks: {chunk_count} OGG Samples: {source_sample_count} VAG Bytes: {dest_sample_bytes}"));
             bar.tick();
         },
         Err(e) => {
