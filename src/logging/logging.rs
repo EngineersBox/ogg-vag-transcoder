@@ -54,7 +54,7 @@ pub fn print_msg_header(fn_timestamp: &dyn ThreadSafeTimestampFn<Output = io::Re
     write!(
         rd,
         "{}",
-        split_module.get(split_module.len() - 1).unwrap(),
+        split_module.last().unwrap(),
     )?;
 
     rd.start_whitespace()?;
@@ -113,13 +113,11 @@ pub fn timestamp_utc(io: &mut dyn io::Write) -> io::Result<()> {
 ///
 pub fn initialize_logging(prefix: String) ->  Logger {
     let log_path: String = String::from("logs/");
-    let directory_creation_message: &str;
-    match fs::create_dir(log_path.as_str()) {
-        Ok(_) => { directory_creation_message = "Created logging directory"; },
-        Err(_) => { directory_creation_message = "Logging directory already exists, skipping";}
-    }
-
-    let log_file_path: String = format!("{}{}{}",(log_path + prefix.as_str()).as_str(),chrono::Utc::now().to_string(),".log");
+    let directory_creation_message: &str = match fs::create_dir(log_path.as_str()) {
+        Ok(_) => "Created logging directory",
+        Err(_) => "Logging directory already exists, skipping"
+    };
+    let log_file_path: String = format!("{}{}{}",(log_path + prefix.as_str()).as_str(),chrono::Utc::now(),".log");
     let file: File = OpenOptions::new()
         .create(true)
         .write(true)
@@ -153,5 +151,5 @@ pub fn initialize_logging(prefix: String) ->  Logger {
     let log: Logger = Logger::root(both, o!());
 
     info!(log.new(get_current_thread_id!()), "{}", directory_creation_message);
-    return log;
+    log
 }

@@ -16,13 +16,19 @@ const VAG_LUT_ENCODINGS: [[f64; 2]; 5] = [
 ];
 
 impl VAGEncoder {
-    pub fn encode_chunk<T: Write>(&mut self, samples: &Vec<i16>, loop_flag: bool, loop_start: u32, loop_end: u32, writer: &mut BufWriter<T>) -> Result<()> {
+    pub fn encode_chunk<T: Write>(&mut self,
+                                  samples: &Vec<i16>,
+                                  loop_flag: bool,
+                                  loop_start: u32,
+                                  loop_end: u32,
+                                  writer: &mut BufWriter<T>) -> Result<usize> {
         let mut _hist_1: f64 = 0.0;
         let mut hist_1: f64 = 0.0;
         let mut _hist_2: f64 = 0.0;
         let mut hist_2: f64 = 0.0;
         let full_chunks: usize = samples.len() / VAG_SAMPLE_NIBBLE;
         let mut exit_next: bool = false;
+        let mut written_count: usize = 0;
         for (iter, pos) in (0..samples.len()).step_by(VAG_SAMPLE_NIBBLE).enumerate() {
             if exit_next {
                 break;
@@ -32,7 +38,7 @@ impl VAGEncoder {
                 buf.copy_from_slice(&samples[pos..pos + VAG_SAMPLE_NIBBLE]);
             } else {
                 let remaining = samples.len() - pos;
-                buf.copy_from_slice(&samples[pos..pos + remaining]);
+                buf[..remaining].copy_from_slice(&samples[pos..pos + remaining]);
             }
             let mut chunk: VAGChunk = VAGChunk::default();
             let mut predict = 0;
@@ -40,7 +46,7 @@ impl VAGEncoder {
             let mut min: f64 = 1e10;
             let mut sample_1: f64 = 0.0;
             let mut sample_2: f64 = 0.0;
-            let mut predict_buf: [[f64; 28]; 5] = [[0.0; 28]; 5];
+            let mut predict_buf: [[f64; 5]; 28] = [[0.0; 5]; 28];
             for (j, encoding) in VAG_LUT_ENCODINGS.iter().enumerate() {
                 let mut max: f64 = 0.0;
                 sample_1 = _hist_1;
@@ -117,19 +123,26 @@ impl VAGEncoder {
             }
             self.last_predict_and_shift = ((((chunk.predict as i16) << 4) & 0xF0) | (chunk.shift as i16 & 0x0F)) as u8;
             writer.write_all(&self.last_predict_and_shift.to_ne_bytes())?;
+            written_count += 1;
             writer.write_all(&chunk.flags.to_ne_bytes())?;
+            written_count += 1;
             writer.write_all(&chunk.sample)?;
+            written_count += VAG_SAMPLE_BYTES;
         }
-        Ok(())
+        Ok(written_count)
     }
 
-    pub fn encode_ending<T: Write>(&self, loop_flag: bool, writer: &mut BufWriter<T>) -> Result<()> {
+    pub fn encode_ending<T: Write>(&self, loop_flag: bool, writer: &mut BufWriter<T>) -> Result<usize> {
+        let mut written_count: usize = 0;
         if !loop_flag {
             writer.write_all(&self.last_predict_and_shift.to_ne_bytes())?;
+            written_count += 1;
             writer.write_all(&(VAGFlag::PlaybackEnd as u8).to_ne_bytes())?;
+            written_count += 1;
             writer.write_all(&[0; VAG_SAMPLE_BYTES])?;
+            written_count += VAG_SAMPLE_BYTES;
         }
-        Ok(())
+        Ok(written_count)
     }
 
 }
