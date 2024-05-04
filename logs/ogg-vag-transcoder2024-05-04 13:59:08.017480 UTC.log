@@ -1,3 +1,0 @@
-{"msg":"Logging directory already exists, skipping","level":"INFO","ts":"2024-05-04T13:59:08.029542Z","thread-id":"ThreadId(1)"}
-{"msg":"Configured Logging","level":"INFO","ts":"2024-05-04T13:59:08.030126Z"}
-{"msg":"Usage: ogg-vag-transcoder <input ogg path> <output vag path>","level":"CRIT","ts":"2024-05-04T13:59:08.030398Z"}

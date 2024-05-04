@@ -1,5 +1,0 @@
-{"msg":"Logging directory already exists, skipping","level":"INFO","ts":"2024-05-04T14:32:57.199957Z","thread-id":"ThreadId(1)"}
-{"msg":"Configured Logging","level":"INFO","ts":"2024-05-04T14:32:57.200632Z"}
-{"msg":"Opened OGG input file as stream","level":"INFO","ts":"2024-05-04T14:32:57.205266Z"}
-{"msg":"Input sample rate: 44100Hz","level":"INFO","ts":"2024-05-04T14:32:57.205542Z"}
-{"msg":"Created output writer for VAG stream","level":"INFO","ts":"2024-05-04T14:32:57.205785Z"}

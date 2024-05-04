@@ -1,5 +1,0 @@
-{"msg":"Logging directory already exists, skipping","level":"INFO","ts":"2024-05-04T14:01:18.09117Z","thread-id":"ThreadId(1)"}
-{"msg":"Configured Logging","level":"INFO","ts":"2024-05-04T14:01:18.091824Z"}
-{"msg":"Opened OGG input file as stream","level":"INFO","ts":"2024-05-04T14:01:18.096066Z"}
-{"msg":"Input sample rate: 44100","level":"INFO","ts":"2024-05-04T14:01:18.096327Z"}
-{"msg":"Unable to create vag file: No such file or directory (os error 2)","level":"CRIT","ts":"2024-05-04T14:01:18.096578Z"}
