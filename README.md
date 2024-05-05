@@ -1,6 +1,6 @@
-# OGG to VAG Transcoder
+# OGG Vorbis to VAG Transcoder
 
-OGG to Sony VAG Transcoder
+Decodes a given OGG Vorbis audio file and re-encodes it as Sony VAG for PSX
 
 ## Build
 
